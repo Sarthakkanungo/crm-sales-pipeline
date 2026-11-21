@@ -5,7 +5,7 @@ import {
   type Deal,
   type DealStage,
 } from "./features/deals/types/deal.types";
-
+import "./App.css";
 const PAGE_SIZE = 50;
 
 function App() {
@@ -21,7 +21,7 @@ function App() {
     let isCurrentRequest = true;
 
     async function loadDeals() {
-      setIsLoading(true);
+      setIsLoading(true)
       setError("");
 
       try {
