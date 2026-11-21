@@ -2,7 +2,7 @@
 // import type { Deal } from "../features/deals/types/deal.types";
 import { generateDeals } from "./generateDeals";
 
-export const mockDeals = generateDeals(10000);
+export const mockDeals = generateDeals(50000);
 // export const mockDeals: Deal[] = [
 //   {
 //     id: "deal-001",
