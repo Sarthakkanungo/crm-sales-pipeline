@@ -1,6 +1,9 @@
 
 import type { Deal, DealStage } from "../types/deal.types";
+import { DEAL_STAGES } from "../types/deal.types";
 import { mockDeals } from "../../../mock/mockdatabase";
+
+const CURRENT_USER = "Rahul Sharma";
 
 interface GetDealsResponse {
   data: Deal[];
@@ -8,10 +11,20 @@ interface GetDealsResponse {
 }
 
 interface GetDealsParams {
-    page : number ;
-    pageSize : number ;
-    search? : string;
-    stage? : DealStage;
+  page: number;
+  pageSize: number;
+  search?: string;
+  stage?: DealStage;
+  ownerName?: string;
+}
+
+export interface DashboardData {
+  activeDeals: number;
+  dueToday: number;
+  overdue: number;
+  wonDeals: number;
+  stageCounts: Record<DealStage, number>;
+  followUps: Deal[];
 }
 
 export interface DealUpdateRequest {
@@ -38,7 +51,7 @@ export type DealUpdateResult =
       retryable: boolean;
     };
 
- function simulateNetworkDelay(): Promise<void> {
+function simulateNetworkDelay(): Promise<void> {
   const delay = Math.floor(Math.random() * 1200) + 300;
 
   return new Promise((resolve) => {
@@ -46,15 +59,125 @@ export type DealUpdateResult =
   });
 }
 
+// Returns the start of today in the user's local timezone.
+function getStartOfToday(): Date {
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+
+  return today;
+}
+
+// Returns the start of tomorrow in the user's local timezone.
+function getStartOfTomorrow(): Date {
+  const tomorrow = getStartOfToday();
+
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return tomorrow;
+}
+
+export async function getDashboardData(
+  ownerName: string = CURRENT_USER
+): Promise<DashboardData> {
+  await simulateNetworkDelay();
+
+  // Only calculate metrics for this salesperson.
+  const ownedDeals = mockDeals.filter(
+    (deal) => deal.ownerName === ownerName
+  );
+
+  const today = getStartOfToday();
+  const tomorrow = getStartOfTomorrow();
+
+  const stageCounts = Object.fromEntries(
+    DEAL_STAGES.map((stage) => [stage, 0])
+  ) as Record<DealStage, number>;
+
+  let activeDeals = 0;
+  let dueToday = 0;
+  let overdue = 0;
+
+  const followUps: Deal[] = [];
+
+  for (const deal of ownedDeals) {
+    stageCounts[deal.stage] += 1;
+
+    if (deal.stage !== "Won" && deal.stage !== "Lost") {
+      activeDeals += 1;
+    }
+
+    if (!deal.nextFollowUpAt) {
+      continue;
+    }
+
+    const followUpDate = new Date(deal.nextFollowUpAt);
+
+    if (followUpDate >= today && followUpDate < tomorrow) {
+      dueToday += 1;
+      followUps.push(deal);
+    } else if (followUpDate < today) {
+      overdue += 1;
+      followUps.push(deal);
+    }
+  }
+
+  followUps.sort((a, b) => {
+    return (
+      new Date(a.nextFollowUpAt!).getTime() -
+      new Date(b.nextFollowUpAt!).getTime()
+    );
+  });
+
+  return {
+    activeDeals,
+    dueToday,
+    overdue,
+    wonDeals: stageCounts["Won"],
+    stageCounts,
+    followUps,
+  };
+}
+
+export async function getDeals({
+  page,
+  pageSize,
+  search = "",
+  stage,
+  ownerName = CURRENT_USER,
+}: GetDealsParams): Promise<GetDealsResponse> {
+  await simulateNetworkDelay();
+
+  const searchText = search.trim().toLowerCase();
+
+  let filteredDeals = mockDeals.filter((deal) => {
+    const matchesOwner = deal.ownerName === ownerName;
+
+    const matchesSearch =
+      deal.name.toLowerCase().includes(searchText) ||
+      deal.companyName.toLowerCase().includes(searchText);
+
+    const matchesStage = !stage || deal.stage === stage;
+
+    return matchesOwner && matchesSearch && matchesStage;
+  });
+
+  const total = filteredDeals.length;
+
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+
+  const data = filteredDeals.slice(startIndex, endIndex);
+
+  return { data, total };
+}
 
 export async function updateDealStage(
   request: DealUpdateRequest
 ): Promise<DealUpdateResult> {
   await simulateNetworkDelay();
 
-  const deal = mockDeals.find(
-    (item) => item.id === request.id
-  );
+  const deal = mockDeals.find((item) => item.id === request.id);
 
   if (!deal) {
     return {
@@ -65,7 +188,6 @@ export async function updateDealStage(
     };
   }
 
-
   if (deal.version !== request.expectedVersion) {
     return {
       status: "conflict",
@@ -75,7 +197,6 @@ export async function updateDealStage(
     };
   }
 
-  
   if (Math.random() < 0.1) {
     return {
       status: "failed",
@@ -85,10 +206,9 @@ export async function updateDealStage(
     };
   }
 
-
   deal.stage = request.newStage;
   deal.updatedAt = new Date().toISOString();
-  deal.updatedBy = "Rahul Sharma";
+  deal.updatedBy = CURRENT_USER;
   deal.version += 1;
 
   return {
@@ -96,51 +216,6 @@ export async function updateDealStage(
     deal: { ...deal },
   };
 }
-
-
-
-export async function getDeals({
-  page ,
-  pageSize ,
-  search = "",
-  stage,
-}: GetDealsParams): Promise<GetDealsResponse> {
-
-  const delay = Math.floor(Math.random() * 1200) + 300;
-
-  await new Promise((resolve) => setTimeout(resolve, delay));
-
-  const searchText = search.trim().toLowerCase();
-
-  let filteredDeals = mockDeals.filter((deal)=> {
-    return(
-        deal.name.toLowerCase().includes(searchText) || 
-        deal.companyName.toLowerCase().includes(searchText) 
-    );
-  });
-
-  if(stage)
-  {
-    filteredDeals = filteredDeals.filter((deal) => {
-        return ( deal.stage === stage
-               )
-        })
-  }
-
-  const total = filteredDeals.length ;
-
-  const startIndex = (page - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-
-  
-  const data = filteredDeals.slice(startIndex, endIndex);
-
-  return {
-    data,
-    total,
-  };
-}
-
 
 export async function updateDealsStage(
   requests: DealUpdateRequest[]
@@ -150,9 +225,7 @@ export async function updateDealsStage(
   const results: DealUpdateResult[] = [];
 
   for (const request of requests) {
-    const deal = mockDeals.find(
-      (item) => item.id === request.id
-    );
+    const deal = mockDeals.find((item) => item.id === request.id);
 
     if (!deal) {
       results.push({
@@ -161,7 +234,6 @@ export async function updateDealsStage(
         message: "Deal not found.",
         retryable: false,
       });
-
       continue;
     }
 
@@ -172,7 +244,6 @@ export async function updateDealsStage(
         latestDeal: { ...deal },
         message: "This deal was modified by another user.",
       });
-
       continue;
     }
 
@@ -183,13 +254,12 @@ export async function updateDealsStage(
         message: "Save failed. Please try again.",
         retryable: true,
       });
-
       continue;
     }
 
     deal.stage = request.newStage;
     deal.updatedAt = new Date().toISOString();
-    deal.updatedBy = "Rahul Sharma";
+    deal.updatedBy = CURRENT_USER;
     deal.version += 1;
 
     results.push({
@@ -201,14 +271,11 @@ export async function updateDealsStage(
   return results;
 }
 
-
 export function simulateTeammateUpdate(
   dealId: string,
   newStage: DealStage
 ): Deal | null {
-  const deal = mockDeals.find(
-    (item) => item.id === dealId
-  );
+  const deal = mockDeals.find((item) => item.id === dealId);
 
   if (!deal) {
     return null;
@@ -222,3 +289,51 @@ export function simulateTeammateUpdate(
   return { ...deal };
 }
 
+
+export async function addDealNote(
+  dealId: string,
+  noteText: string
+): Promise<Deal> {
+  await simulateNetworkDelay();
+
+  const deal = mockDeals.find((item) => item.id === dealId);
+
+  if (!deal) {
+    throw new Error("Deal not found");
+  }
+
+  const newNote = {
+    id: `note-${Date.now()}`,
+    text: noteText,
+    createdBy: CURRENT_USER,
+    createdAt: new Date().toISOString(),
+  };
+
+  deal.notes.push(newNote);
+
+  deal.updatedAt = new Date().toISOString();
+  deal.updatedBy = CURRENT_USER;
+  deal.version += 1;
+
+  return { ...deal, notes: [...deal.notes] };
+}
+
+export async function updateDealFollowUp(
+  dealId: string,
+  followUpDate: string
+): Promise<Deal> {
+  await simulateNetworkDelay();
+
+  const deal = mockDeals.find((item) => item.id === dealId);
+
+  if (!deal) {
+    throw new Error("Deal not found");
+  }
+
+  deal.nextFollowUpAt = followUpDate;
+  deal.updatedAt = new Date().toISOString();
+  deal.updatedBy = CURRENT_USER;
+  deal.version += 1;
+
+  return { ...deal, notes: [...deal.notes] };
+}
