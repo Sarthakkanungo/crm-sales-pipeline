@@ -28,17 +28,17 @@ The screen is organised around the five things the team said:
 
 | What the team said | What the screen does |
 |---|---|
-| "I don't know which deals to work on today." | A **Today** strip (overdue follow-ups, due today, active, won) and **tabs above the table with live counts**: *All deals · Overdue · Due today · Updated today*. Choosing Overdue or Due today sorts by follow-up date, so the most urgent deal is the first row. Every card and stage also filters the table. |
+| "I don't know which deals to work on today." | A compact overview (overdue follow-ups, due today, active, won, each with its amount) and **tabs above the table with live counts**: *All deals · Active · Overdue · Due today · Updated today*. Choosing Overdue or Due today sorts by follow-up date, so the most urgent deal is the first row. Every card and stage also filters the table. |
 | "I moved a deal, but it didn't save, and nobody told me." | Each save shows **Saving…** on the row. A failure rolls the row back and leaves a red **Not saved · Retry** marker on it, plus a toast that stays until you act. A failure is never silent. |
 | "Deals keep jumping around because teammates are editing." | Teammate changes update the row **in place**, flash it and say who changed it. Rows are never re-sorted or removed while you work. A pill offers **Refresh view** when you are ready. |
-| "At quarter end I need to move thousands of old deals to Lost." | Select rows across pages, or **select every deal in the current view** (for example all 8,292 of mine). Move them in one action, with a confirm step for Won/Lost, a progress bar, Cancel, a result summary, Retry for failures and Undo. |
-| "I can't use a mouse for long." | The whole flow works from the keyboard: arrows/j k, Space to select, Shift+arrows, 1–7 to move, Enter to open, `/` to search, Ctrl+Z to undo, `?` for help. |
+| "At quarter end I need to move thousands of old deals to Lost." | Tick rows anywhere in the list, or **select every deal in the current view** (for example all 8,292 of mine). Move them in one action, with a confirm step for Won/Lost, a progress bar, Cancel, a result summary, Retry for failures and Undo. |
+| "I can't use a mouse for long." | The whole flow works from the keyboard: arrows/j k, Space to select, Shift+arrows, 1–7 to move (the focused row, or the ticked rows), Enter to open, `/` to search, Ctrl+Z to undo, `?` for help. |
 
 **Table, not a board.** A board is the obvious picture of a pipeline, but some stages hold 10,000 deals, and a column of 10,000 cards can't be scanned, sorted or selected in bulk. A table gives dense rows, sorting, multi-select and natural keyboard movement. The board's useful part, seeing how many deals sit in each stage, is kept as a row of stage cards above the table. Those cards also filter the table.
 
 ### Key UX decisions and alternatives I rejected
 
-- **Saves are optimistic for single moves and confirmed for bulk moves.** A single move changes the row immediately, because waiting 0.3–1.5 s for every keypress feels broken. For thousands of deals, showing them all as moved and then putting back about 10% of them would flicker and mislead. So bulk rows show *Queued → Lost* and change only when the server confirms.
+- **Saves are optimistic for single moves and confirmed for bulk moves.** A single move changes the row immediately, because waiting 0.3–1.5 s for every keypress feels broken. For thousands of deals, showing them all as moved and then putting back about 10% of them would flicker and mislead. So bulk rows show *Queued → Lost* and change only when the server confirms. A selection of exactly **one** deal is treated as a single move (instant, with Undo), not as a "bulk move of 1" with a progress bar. Moving a deal from its detail panel closes the panel straight away, because the row already shows the new stage and the toast reports the outcome.
 - **Live updates never move rows.** I rejected re-running the query on every teammate change, which is exactly the "jumping around" complaint. A changed row that no longer matches the filter stays, greyed out, with "Moved by Priya · not in this view".
 - **Confirmation only where it protects you.** Moving to Won or Lost in bulk asks once, and the confirm button gets focus so Enter confirms. Everything else goes straight through, with Undo available instead of an "Are you sure?" popup.
 - **One continuous scrolling list, not pages.** I started with pagination, then changed it once it was clear the users **browse** long lists (all 1,200 Negotiation deals) rather than only filtering. Paging meant 24 clicks and 24 network waits for one stage, which is exactly the "excessive manual actions". Now the table scrolls inside its own area with the filters, tabs and column header always visible. Only the ~20 rows on screen exist in the page (`@tanstack/react-virtual`), rows load in batches of 200 **before you reach them**, and the footer says where you are: *"Rows 201–215 of 1,235"*, with **Back to top**. I rejected plain infinite scroll (appending rows forever), because thousands of real rows on the page would get slow.
@@ -50,11 +50,12 @@ The screen is organised around the five things the team said:
   - live updates about deals a rep can't see are never sent.
 
   Login is out of scope, so the Simulator has a "Signed in as" switch for testing.
-- **Native dropdowns, styled.** The stage filter shows counts per stage (`5. Negotiation · 1,146`). I kept native `<select>` elements, with consistent styling, instead of building custom ones: they get keyboard, screen-reader and mobile behaviour for free.
+- **Search covers what the row shows.** The search box matches deal name, company, or the exact deal ID (`deal-23` finds deal-23, not deal-230). It runs after the access check, so a representative searching a teammate's deal ID gets the same "no match" as for an ID that doesn't exist.
+- **Native dropdowns, styled.** I kept native `<select>` elements, with consistent styling, instead of building custom ones: they get keyboard, screen-reader and mobile behaviour for free. Stage counts live on the stage cards and tab badges, not inside the dropdown, where they got cut off.
 - **Money next to every count.** Each overview tile and stage shows its total deal value in lakhs and crores (e.g. *Overdue 608 · ₹302 Cr*), because value matters as much as count when deciding what to chase. The amounts update live when deals move, and reps see totals for their own deals only.
 - **Managers get a "My deals / Whole team" switch** for the shared pipeline and the 50k-deal case.
 - **The keyboard moves through the whole list.** ↑/↓ move row by row and the list follows; Page Up / Page Down move one screen (from anywhere on the page, not while typing); Home / End jump to the first / last deal, even 8,000 rows away. Focus is never lost when a row loads in.
-- **Quiet colours, colour only for meaning.** Neutral greys for structure; red, amber, blue and green only for status (overdue, today, active, won) and stage. Small uppercase table headers, very light row striping, a blue tint on hover, a blue bar on selected rows, right-aligned money, and one solid primary button (Next).
+- **Quiet colours, one hue per meaning.** Neutral greys for structure. Every overview tile and stage card has its own colour (red Overdue, amber Due today, blue Active, green Won; indigo, cyan, violet, deep orange, pink, teal and slate for the seven stages), and the stage badges in the table use the same colours. Each view tab reuses its tile's colour, so the Overdue tab and the Overdue tile read as one thing. Lost is slate, not red: red is kept for Overdue, the thing that needs action. Small uppercase table headers, very light row striping, a blue bar on selected rows, right-aligned money, and the Overdue/Today badge stacked under the follow-up date.
 
 ### How I handled failed saves and teammates' changes
 
@@ -79,7 +80,7 @@ Measured on the production build: a fast scroll through 36,000 px of rows caused
 
 **How it stays fast:**
 
-- The client holds only the current page, the open deal and deals with an unfinished save. The store never holds 50,000 rows.
+- The client holds only the loaded batches around the visible rows, the open deal and deals with an unfinished save. The store never holds 50,000 rows.
 - Each row subscribes only to its own deal (Zustand selector + `memo`), so a teammate update re-renders one row.
 - The fake server works like a small database (`src/features/deals/logic/queryEngine.ts`):
   - a **stage index**, so "Negotiation" reads ~7,000 deals instead of scanning 50,000
@@ -98,7 +99,7 @@ Measured on the production build: a fast scroll through 36,000 px of rows caused
 | Sort by last updated | 62 ms freeze | **none** |
 | Type a search | none | none |
 | Quick filter / stage filter | none | none |
-| 60 × ↓ across pages | none | none |
+| 60 × ↓ through the list | none | none |
 | Bulk move of a whole stage (~7,200 deals) | none | none |
 | First load | 186 ms | 245 ms |
 
@@ -127,7 +128,7 @@ In dev mode (`npm run dev`) interactions show 60–90 ms blocks. Profiling shows
 - the per-deal save queue and version chaining for quick repeated moves
 - the bulk runner: partial results, a whole chunk failing, cancel, progress and the concurrency limit
 - selecting individual rows anywhere in the list, and "select everything in this view"
-- filters, sorting and dashboard counts
+- filters (including search by exact deal ID), sorting and dashboard counts
 - the query engine returns exactly the same rows as a plain full scan, serves repeats from cache, and is never stale after a change
 - the cached formatters produce the same text as `toLocaleString`
 - which batches of rows to load ahead and which to drop, and that later batches of a list keep the same order even if a teammate edits in between
@@ -146,18 +147,9 @@ I also checked these flows in a real browser: load, keyboard navigation (includi
 - On a 1280×800 screen about 7 rows are visible with the overview open, and about 9 with it hidden. Larger screens show more (12 at 1920×1080).
 - The fake server keeps the 12 most recent list snapshots. If a list's snapshot expires while you scroll, the list reloads from the top.
 - In the manager's Whole team view (one extra column), the table scrolls sideways inside its area on screens narrower than about 1,330 px.
-
 - Teammate simulation changes stages only. Simulated failures apply to saves, as the brief describes; page loads always succeed.
 - No offline queue: a save made while "offline" fails and has to be retried by hand.
 - The browser checks were manual. There are no automated end-to-end tests in the repo.
 - First load blocks the page for about 245 ms (production build), because the fake server generates 50,000 deals and builds its index in the browser.
 - Access control is **simulated**: the "server" runs in the same browser tab and reads the role from a client-side store, so a determined user could change it. A real backend would take the role from the login token on every request. The rules themselves (`src/features/session/permissions.ts`) are written to move to the server unchanged.
 - Only two roles exist (representative, manager). Real teams often need more, such as a manager who sees only their own team, or read-only finance access.
-
-### What I would do with more time
-
-- Automated end-to-end tests (Playwright) for the keyboard and bulk flows.
-- Saved views ("Quarter-end cleanup: close date passed and still open").
-- A real activity feed per deal, and showing who else is viewing a deal.
-- An offline queue that retries saves when the connection comes back, with exponential backoff.
-- Multi-level undo and a per-session history of moves.
