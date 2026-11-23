@@ -27,13 +27,14 @@ import {
 } from "./features/deals/logic/selection";
 import { useBulkStore } from "./features/deals/store/bulkStore";
 import { useDealStore } from "./features/deals/store/dealStore";
-import type {
-  Deal,
-  DealQuery,
-  DealStage,
-  QuickFilter,
-  SortDirection,
-  SortKey,
+import {
+  DEAL_STAGES,
+  type Deal,
+  type DealQuery,
+  type DealStage,
+  type QuickFilter,
+  type SortDirection,
+  type SortKey,
 } from "./features/deals/types/deal.types";
 import { resolveFilterConflict } from "./features/deals/logic/dealQuery";
 import { isTypingTarget } from "./shared/focus";
@@ -334,6 +335,16 @@ function App() {
       ) {
         event.preventDefault();
         tableRef.current?.moveByScreen(event.key === "PageDown" ? 1 : -1);
+      } else if (
+        !event.defaultPrevented &&
+        selectionCount(useDealStore.getState().selection) > 0
+      ) {
+        const stage = DEAL_STAGES[Number(event.key) - 1];
+
+        if (stage) {
+          event.preventDefault();
+          requestBulkMove(stage);
+        }
       }
     }
 
