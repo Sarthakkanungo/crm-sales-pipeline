@@ -2,6 +2,8 @@
 
 A single screen for a 20-person sales team that shares one pipeline of 50,000 deals.
 
+**Live demo:** https://crmsalespipeline.netlify.app
+
 ## Run it
 
 ```bash
@@ -11,7 +13,7 @@ npm install && npm run dev
 | Command | What it does |
 |---|---|
 | `npm run dev` | Starts the app at http://localhost:5173 |
-| `npm test` | Runs the unit tests (Vitest, 82 tests) |
+| `npm test` | Runs the unit tests (Vitest, 84 tests) |
 | `npm run measure` | Times the query engine against a plain full scan on 50,000 deals and prints a table |
 | `npm run build` | Type-checks and builds for production |
 | `npm run lint` | Runs oxlint |
