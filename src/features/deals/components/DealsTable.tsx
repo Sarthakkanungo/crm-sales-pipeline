@@ -21,6 +21,7 @@ import { DealRow } from "./DealRow";
 
 export interface DealsTableHandle {
   focusActiveRow: () => void;
+  focusFirstRow: () => void;
   moveByScreen: (direction: 1 | -1) => void;
 }
 
@@ -241,6 +242,10 @@ export function DealsTable({
     ref,
     () => ({
       focusActiveRow: () => focusIndex(focusedIndex),
+      focusFirstRow: () => {
+        tableHasFocus.current = true;
+        focusIndex(0, "start");
+      },
       moveByScreen: (direction) => {
         tableHasFocus.current = true;
         focusIndex(firstVisible + direction * rowsPerScreen, "start");

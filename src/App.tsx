@@ -30,6 +30,7 @@ import { useBulkStore } from "./features/deals/store/bulkStore";
 import { useDealStore } from "./features/deals/store/dealStore";
 import {
   DEAL_STAGES,
+  VIEW_ORDER,
   type Deal,
   type DealQuery,
   type DealStage,
@@ -76,6 +77,7 @@ function App() {
   const [searchInput, setSearchInput] = useState("");
   const search = useDebouncedValue(searchInput, 300);
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const quickFilterRef = useRef(filters.quickFilter);
   const session = useSession();
   const permissions = getPermissions(session);
   const scope = allowedScope(session, filters.scope);
@@ -108,6 +110,10 @@ function App() {
   useEffect(() => {
     queryRef.current = query;
   }, [query]);
+
+  useEffect(() => {
+    quickFilterRef.current = filters.quickFilter;
+  }, [filters.quickFilter]);
 
   useEffect(() => {
     keepIdsRef.current = drawer ? [drawer.dealId] : [];
@@ -357,6 +363,14 @@ function App() {
       ) {
         event.preventDefault();
         tableRef.current?.moveByScreen(event.key === "PageDown" ? 1 : -1);
+      } else if (event.key === "Home" && !event.defaultPrevented) {
+        event.preventDefault();
+        tableRef.current?.focusFirstRow();
+      } else if (event.key === "[" || event.key === "]") {
+        event.preventDefault();
+        const step = event.key === "]" ? 1 : -1;
+        const current = VIEW_ORDER.indexOf(quickFilterRef.current);
+        selectView(VIEW_ORDER[(current + step + VIEW_ORDER.length) % VIEW_ORDER.length]);
       } else if (
         !event.defaultPrevented &&
         selectionCount(useDealStore.getState().selection) > 0
@@ -465,6 +479,7 @@ function App() {
             onStageChange={(stage) => updateFilters({ stage })}
             onScopeChange={(scope) => updateFilters({ scope })}
             onClearFilters={clearFilters}
+            onGoToResults={() => tableRef.current?.focusFirstRow()}
           />
         </div>
 

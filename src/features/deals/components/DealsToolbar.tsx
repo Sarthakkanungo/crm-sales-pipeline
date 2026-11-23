@@ -12,6 +12,7 @@ interface DealsToolbarProps {
   onStageChange: (stage: DealStage | null) => void;
   onScopeChange: (scope: DealScope) => void;
   onClearFilters: () => void;
+  onGoToResults: () => void;
 }
 
 const SCOPES: Array<{ value: DealScope; label: string }> = [
@@ -30,6 +31,7 @@ export function DealsToolbar({
   onStageChange,
   onScopeChange,
   onClearFilters,
+  onGoToResults,
 }: DealsToolbarProps) {
   return (
     <div className="toolbar" role="search" aria-label="Deal filters">
@@ -42,6 +44,12 @@ export function DealsToolbar({
           value={searchInput}
           onChange={(event) => onSearchChange(event.target.value)}
           onKeyDown={(event) => {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              onGoToResults();
+              return;
+            }
+
             if (event.key === "Escape" && searchInput) {
               event.stopPropagation();
               onSearchChange("");

@@ -38,6 +38,14 @@ export type DealScope = "mine" | "all";
 
 export type QuickFilter = "active" | "overdue" | "dueToday" | "updatedToday";
 
+export const VIEW_ORDER: ReadonlyArray<QuickFilter | null> = [
+  null,
+  "active",
+  "overdue",
+  "dueToday",
+  "updatedToday",
+];
+
 export type SortKey = "nextFollowUpAt" | "value" | "closeDate" | "updatedAt";
 
 export type SortDirection = "asc" | "desc";

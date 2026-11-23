@@ -7,7 +7,9 @@ interface ShortcutHelpProps {
 
 const SHORTCUTS: Array<{ keys: string; action: string }> = [
   { keys: "↑ ↓  or  j k", action: "Move between deals; the list scrolls with you" },
-  { keys: "Home / End", action: "Jump to the first / last deal in the list" },
+  { keys: "Home", action: "Go to the first deal from anywhere on the page" },
+  { keys: "End", action: "Jump to the last deal in the list" },
+  { keys: "↓ in search", action: "Go from the search box to the first result" },
   { keys: "PageUp / PageDown", action: "Move one screen up / down" },
   { keys: "Space  or  x", action: "Select or unselect the focused deal" },
   { keys: "Shift + ↑ ↓", action: "Extend the selection" },
@@ -15,6 +17,7 @@ const SHORTCUTS: Array<{ keys: string; action: string }> = [
   { keys: "1 – 7", action: "Move the focused deal, or all selected deals, to that stage" },
   { keys: "Shift + 1 – 7", action: "Show only that stage; press again to show all" },
   { keys: "Shift + 0", action: "Show all stages" },
+  { keys: "[  /  ]", action: "Previous / next view tab (All, Active, Overdue, Due today, Updated today)" },
   { keys: "/", action: "Jump to search" },
   { keys: "Ctrl + Z", action: "Undo the last move" },
   { keys: "Esc", action: "Close a panel, or clear the selection" },
