@@ -29,6 +29,8 @@ function makeDeal(id: string, stage: DealStage, version: number): Deal {
 function makeRequests(count: number): BulkRequest[] {
   return Array.from({ length: count }, (_, index) => ({
     id: `deal-${index + 1}`,
+    name: "Fleet",
+    companyName: "Acme",
     fromStage: "Negotiation",
     newStage: "Lost",
     expectedVersion: 1,

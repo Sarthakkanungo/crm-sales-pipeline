@@ -44,6 +44,8 @@ export interface BulkCandidate {
   id: string;
   version: number;
   stage: DealStage;
+  name: string;
+  companyName: string;
 }
 
 type DealChangeListener = (event: DealChangeEvent) => void;
@@ -180,7 +182,13 @@ export async function getBulkCandidates(
 
   return queryEngine
     .run(permittedQuery(query), CURRENT_USER, new Date())
-    .map((deal) => ({ id: deal.id, version: deal.version, stage: deal.stage }));
+    .map((deal) => ({
+      id: deal.id,
+      version: deal.version,
+      stage: deal.stage,
+      name: deal.name,
+      companyName: deal.companyName,
+    }));
 }
 
 export async function getDashboardData(

@@ -1018,7 +1018,7 @@ tr:focus-visible,
   height: 10px;
 }
 
-.bulk-result p {
+.bulk-result > p {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -1052,12 +1052,86 @@ tr:focus-visible,
 }
 
 .bulk-details {
-  max-height: 200px;
+  display: grid;
+  gap: 12px;
+  max-height: 320px;
   overflow-y: auto;
-  margin: 10px 0 0;
-  padding-left: 18px;
-  color: #475467;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #eaecf0;
+  border-radius: 8px;
+  background: white;
+  color: #344054;
   font-size: 12px;
+}
+
+.bulk-detail-group {
+  display: grid;
+  gap: 6px;
+}
+
+.bulk-detail-title {
+  margin: 0;
+  font-size: 13px;
+}
+
+.bulk-detail-help {
+  margin: 0;
+  color: #475467;
+  line-height: 1.5;
+}
+
+.bulk-detail-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #f2f4f7;
+  border-radius: 6px;
+}
+
+.bulk-detail-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 6px 10px;
+}
+
+.bulk-detail-list li + li {
+  border-top: 1px solid #f2f4f7;
+}
+
+.bulk-detail-deal {
+  overflow: hidden;
+  color: #101828;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bulk-detail-change {
+  color: #475467;
+}
+
+.bulk-detail-id {
+  color: #98a2b3;
+  font-variant-numeric: tabular-nums;
+}
+
+.bulk-detail-more {
+  margin: 0;
+  color: #667085;
+}
+
+@media (max-width: 640px) {
+  .bulk-detail-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 12px;
+  }
+
+  .bulk-detail-change {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }
 
 .table-loading tbody {

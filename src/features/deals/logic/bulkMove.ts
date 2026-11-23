@@ -7,6 +7,8 @@ import type {
 
 export interface BulkRequest {
   id: string;
+  name: string;
+  companyName: string;
   fromStage: DealStage;
   newStage: DealStage;
   expectedVersion: number;

@@ -3,6 +3,17 @@ import type { Deal, DealQuery, DealStage } from "../types/deal.types";
 export interface SelectedDeal {
   version: number;
   stage: DealStage;
+  name: string;
+  companyName: string;
+}
+
+function rememberDeal(deal: Deal): SelectedDeal {
+  return {
+    version: deal.version,
+    stage: deal.stage,
+    name: deal.name,
+    companyName: deal.companyName,
+  };
 }
 
 export type Selection =
@@ -40,7 +51,7 @@ export function setDealsSelected(
 
     for (const deal of deals) {
       if (selected) {
-        items[deal.id] = { version: deal.version, stage: deal.stage };
+        items[deal.id] = rememberDeal(deal);
       } else {
         delete items[deal.id];
       }
@@ -88,7 +99,7 @@ export function syncSelectedDeal(selection: Selection, deal: Deal): Selection {
     mode: "ids",
     items: {
       ...selection.items,
-      [deal.id]: { version: deal.version, stage: deal.stage },
+      [deal.id]: rememberDeal(deal),
     },
   };
 }

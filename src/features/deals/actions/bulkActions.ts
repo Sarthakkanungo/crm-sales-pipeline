@@ -9,6 +9,7 @@ import { EMPTY_SELECTION, selectionCount } from "../logic/selection";
 import {
   getBulkCandidates,
   updateDealsStage,
+  type BulkCandidate,
 } from "../services/dealService";
 import { useBulkStore, type BulkKind } from "../store/bulkStore";
 import { useDealStore, type SaveStatus } from "../store/dealStore";
@@ -108,13 +109,12 @@ async function startBulkMove(targetStage: DealStage): Promise<void> {
     outcome: null,
   });
 
-  let candidates: Array<{ id: string; version: number; stage: DealStage }>;
+  let candidates: BulkCandidate[];
 
   if (selection.mode === "ids") {
     candidates = Object.entries(selection.items).map(([id, item]) => ({
       id,
-      version: item.version,
-      stage: item.stage,
+      ...item,
     }));
   } else {
     try {
@@ -141,6 +141,8 @@ async function startBulkMove(targetStage: DealStage): Promise<void> {
     } else {
       requests.push({
         id: candidate.id,
+        name: candidate.name,
+        companyName: candidate.companyName,
         fromStage: candidate.stage,
         newStage: targetStage,
         expectedVersion: candidate.version,
@@ -324,6 +326,8 @@ export async function applyMineToConflicts(): Promise<void> {
     .filter(({ request, latestDeal }) => latestDeal.stage !== request.newStage)
     .map(({ request, latestDeal }) => ({
       id: request.id,
+      name: latestDeal.name,
+      companyName: latestDeal.companyName,
       fromStage: latestDeal.stage,
       newStage: request.newStage,
       expectedVersion: latestDeal.version,
@@ -343,6 +347,8 @@ export async function undoBulk(
 
   const requests: BulkRequest[] = outcome.saved.map(({ request, deal }) => ({
     id: deal.id,
+    name: deal.name,
+    companyName: deal.companyName,
     fromStage: deal.stage,
     newStage: request.fromStage,
     expectedVersion: deal.version,
