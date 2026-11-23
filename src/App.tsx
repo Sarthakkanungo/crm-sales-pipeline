@@ -323,6 +323,22 @@ function App() {
         return;
       }
 
+      const stageShortcut = /^Digit([0-7])$/.exec(event.code);
+
+      if (event.shiftKey && stageShortcut) {
+        event.preventDefault();
+        const stage = DEAL_STAGES[Number(stageShortcut[1]) - 1] ?? null;
+
+        setFilters((current) =>
+          resolveFilterConflict(
+            { ...current, stage: stage === current.stage ? null : stage },
+            "stage"
+          )
+        );
+        setFocusedIndex(0);
+        return;
+      }
+
       if (event.key === "/") {
         event.preventDefault();
         searchRef.current?.focus();

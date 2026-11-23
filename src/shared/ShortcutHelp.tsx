@@ -13,6 +13,8 @@ const SHORTCUTS: Array<{ keys: string; action: string }> = [
   { keys: "Shift + ↑ ↓", action: "Extend the selection" },
   { keys: "Enter  or  o", action: "Open the focused deal" },
   { keys: "1 – 7", action: "Move the focused deal, or all selected deals, to that stage" },
+  { keys: "Shift + 1 – 7", action: "Show only that stage; press again to show all" },
+  { keys: "Shift + 0", action: "Show all stages" },
   { keys: "/", action: "Jump to search" },
   { keys: "Ctrl + Z", action: "Undo the last move" },
   { keys: "Esc", action: "Close a panel, or clear the selection" },
