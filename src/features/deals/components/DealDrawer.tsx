@@ -13,6 +13,7 @@ import {
   formatDate,
   formatDateTime,
   stageClassName,
+  stageSlug,
 } from "../../../shared/format";
 import {
   addNote,
@@ -145,7 +146,7 @@ export function DealDrawer({ dealId, openedAt, onClose }: DealDrawerProps) {
     >
       <div
         ref={dialogRef}
-        className="deal-drawer"
+        className={`deal-drawer accent-${stageSlug(shownStage)}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -175,7 +176,7 @@ export function DealDrawer({ dealId, openedAt, onClose }: DealDrawerProps) {
         )}
 
         <div className="deal-details">
-          <div>
+          <div className="deal-details-value">
             <span>Deal value</span>
             <strong>{formatCurrency(deal.value, deal.currency)}</strong>
           </div>
