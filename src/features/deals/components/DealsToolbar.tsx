@@ -1,6 +1,4 @@
 import type { Ref } from "react";
-import { formatCount } from "../../../shared/format";
-import { useDealStore } from "../store/dealStore";
 import { DEAL_STAGES, type DealScope, type DealStage } from "../types/deal.types";
 
 interface DealsToolbarProps {
@@ -33,16 +31,14 @@ export function DealsToolbar({
   onScopeChange,
   onClearFilters,
 }: DealsToolbarProps) {
-  const stageCounts = useDealStore((state) => state.dashboard?.stageCounts);
-
   return (
     <div className="toolbar" role="search" aria-label="Deal filters">
       <label className="search-field">
-        <span className="visually-hidden">Search deals (shortcut: /)</span>
+        <span className="visually-hidden">Search by deal name, company or deal ID (shortcut: /)</span>
         <input
           ref={searchRef}
           type="search"
-          placeholder="Search deal or company   /"
+          placeholder="Search name, company or deal ID   /"
           value={searchInput}
           onChange={(event) => onSearchChange(event.target.value)}
           onKeyDown={(event) => {
@@ -66,7 +62,6 @@ export function DealsToolbar({
           {DEAL_STAGES.map((item, index) => (
             <option key={item} value={item}>
               {index + 1}. {item}
-              {stageCounts ? ` · ${formatCount(stageCounts[item])}` : ""}
             </option>
           ))}
         </select>

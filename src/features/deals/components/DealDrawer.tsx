@@ -82,6 +82,7 @@ export function DealDrawer({ dealId, openedAt, onClose }: DealDrawerProps) {
 
     void moveDeal(dealId, targetStage);
     setTargetStage("");
+    onClose();
   }
 
   async function handleAddNote(event: FormEvent<HTMLFormElement>): Promise<void> {

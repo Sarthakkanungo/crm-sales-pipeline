@@ -131,7 +131,9 @@ export function createDealMatcher(
     if (search) {
       const keys = getKeys(deal);
 
-      if (!keys.nameLower.includes(search) && !keys.companyLower.includes(search)) {
+      const isIdMatch = deal.id.toLowerCase() === search;
+
+      if (!isIdMatch && !keys.nameLower.includes(search) && !keys.companyLower.includes(search)) {
         return false;
       }
     }

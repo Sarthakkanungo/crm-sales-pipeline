@@ -20,7 +20,7 @@ const TABS: Array<{
   { value: "active", label: "Active", countKey: "active", tone: "blue" },
   { value: "overdue", label: "Overdue", countKey: "overdue", tone: "red" },
   { value: "dueToday", label: "Due today", countKey: "dueToday", tone: "amber" },
-  { value: "updatedToday", label: "Updated today", countKey: "updatedToday", tone: "purple" },
+  { value: "updatedToday", label: "Updated today", countKey: "updatedToday", tone: "moss" },
 ];
 
 export function ViewTabs({ active, counts, sortedByPriority, onChange }: ViewTabsProps) {

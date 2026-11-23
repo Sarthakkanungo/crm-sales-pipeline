@@ -13,7 +13,7 @@ import {
 import { useBulkStore, type BulkKind } from "../store/bulkStore";
 import { useDealStore, type SaveStatus } from "../store/dealStore";
 import type { DealStage } from "../types/deal.types";
-import { recordStageChangeInDashboard } from "./dealActions";
+import { moveDeal, recordStageChangeInDashboard } from "./dealActions";
 
 const CHUNK_SIZE = 200;
 const CONCURRENCY = 3;
@@ -24,10 +24,29 @@ function isBulkRunning(): boolean {
   return status === "preparing" || status === "running";
 }
 
+function singleSelectedId(): string | null {
+  const { selection } = useDealStore.getState();
+
+  if (selection.mode !== "ids") {
+    return null;
+  }
+
+  const ids = Object.keys(selection.items);
+  return ids.length === 1 ? ids[0] : null;
+}
+
 export function requestBulkMove(targetStage: DealStage): void {
   const count = selectionCount(useDealStore.getState().selection);
 
   if (count === 0) {
+    return;
+  }
+
+  const singleId = singleSelectedId();
+
+  if (singleId) {
+    useDealStore.getState().setSelection(EMPTY_SELECTION);
+    void moveDeal(singleId, targetStage);
     return;
   }
 

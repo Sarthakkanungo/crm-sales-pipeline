@@ -162,7 +162,10 @@ export const DealRow = memo(function DealRow({
           checked={selected}
           readOnly
           aria-label={`Select ${deal.companyName} ${deal.name}`}
-          onClick={(event) => onToggleSelect(dealId, index, event.shiftKey)}
+          onClick={(event) => {
+            event.currentTarget.closest("tr")?.focus();
+            onToggleSelect(dealId, index, event.shiftKey);
+          }}
         />
       </td>
 

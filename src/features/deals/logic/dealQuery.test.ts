@@ -64,6 +64,13 @@ describe("createDealMatcher", () => {
     expect(matches(makeDeal({ companyName: "Other", name: "Other" }))).toBe(false);
   });
 
+  it("finds a deal by its exact ID without matching longer IDs", () => {
+    const matches = createDealMatcher({ ...baseQuery, search: " DEAL-23 " }, "Rahul Sharma", NOW);
+
+    expect(matches(makeDeal({ id: "deal-23", name: "Other", companyName: "Other" }))).toBe(true);
+    expect(matches(makeDeal({ id: "deal-230", name: "Other", companyName: "Other" }))).toBe(false);
+  });
+
   it("finds overdue follow-ups on open deals only", () => {
     const matches = createDealMatcher(
       { ...baseQuery, quickFilter: "overdue" },

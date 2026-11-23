@@ -377,13 +377,13 @@ tbody tr:last-child td {
 }
 
 .stage-new-lead {
-  background: #eff6ff;
-  color: #175cd3;
+  background: #eef4ff;
+  color: #3538cd;
 }
 
 .stage-contacted {
-  background: #f0f9ff;
-  color: #026aa2;
+  background: #ecfdff;
+  color: #0e7090;
 }
 
 .stage-demo-done {
@@ -392,8 +392,8 @@ tbody tr:last-child td {
 }
 
 .stage-proposal-sent {
-  background: #fff4e5;
-  color: #b54708;
+  background: #fff6ed;
+  color: #c4320a;
 }
 
 .stage-negotiation {
@@ -402,13 +402,13 @@ tbody tr:last-child td {
 }
 
 .stage-won {
-  background: #ecfdf3;
-  color: #027a48;
+  background: #f0fdf9;
+  color: #107569;
 }
 
 .stage-lost {
-  background: #fef3f2;
-  color: #b42318;
+  background: #f2f4f7;
+  color: #475467;
 }
 
 .empty-state {
@@ -946,10 +946,10 @@ tr:focus-visible,
   --tab-text: #175cd3;
 }
 
-.view-tab.tone-purple {
-  --tab-accent: #7a5af8;
-  --tab-soft: #f4f0ff;
-  --tab-text: #6941c6;
+.view-tab.tone-moss {
+  --tab-accent: #66c61c;
+  --tab-soft: #f3fee7;
+  --tab-text: #3b7c0f;
 }
 
 .view-tabs-note {
@@ -1328,15 +1328,15 @@ th[aria-sort="descending"] .sort-button {
 }
 
 .accent-new-lead {
-  --accent: #2e90fa;
-  --accent-text: #175cd3;
-  --accent-soft: #eff6ff;
+  --accent: #6172f3;
+  --accent-text: #3538cd;
+  --accent-soft: #eef4ff;
 }
 
 .accent-contacted {
-  --accent: #0ba5ec;
-  --accent-text: #026aa2;
-  --accent-soft: #f0f9ff;
+  --accent: #06aed4;
+  --accent-text: #0e7090;
+  --accent-soft: #ecfdff;
 }
 
 .accent-demo-done {
@@ -1346,9 +1346,9 @@ th[aria-sort="descending"] .sort-button {
 }
 
 .accent-proposal-sent {
-  --accent: #f79009;
-  --accent-text: #b54708;
-  --accent-soft: #fff4e5;
+  --accent: #ef6820;
+  --accent-text: #c4320a;
+  --accent-soft: #fff6ed;
 }
 
 .accent-negotiation {
@@ -1358,15 +1358,15 @@ th[aria-sort="descending"] .sort-button {
 }
 
 .accent-won {
-  --accent: #12b76a;
-  --accent-text: #027a48;
-  --accent-soft: #ecfdf3;
+  --accent: #15b79e;
+  --accent-text: #107569;
+  --accent-soft: #f0fdf9;
 }
 
 .accent-lost {
-  --accent: #f04438;
-  --accent-text: #b42318;
-  --accent-soft: #fef3f2;
+  --accent: #667085;
+  --accent-text: #475467;
+  --accent-soft: #f2f4f7;
 }
 
 .metric-card,
@@ -2276,4 +2276,72 @@ tbody tr.deal-row:focus-visible {
     flex: none;
     height: 70vh;
   }
+}
+
+.deals-controls .view-tabs {
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.deals-controls .view-tab {
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--tab-accent) 14%, transparent);
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  background: color-mix(in srgb, var(--tab-soft) 70%, white);
+}
+
+.deals-controls .view-tab:hover {
+  background: var(--tab-soft);
+}
+
+.deals-controls .view-tab[aria-selected="true"] {
+  border-color: color-mix(in srgb, var(--tab-accent) 28%, transparent);
+  border-bottom-color: var(--tab-accent);
+  background: color-mix(in srgb, var(--tab-accent) 12%, white);
+}
+
+.deals-controls .view-tab .view-tab-count {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tab-accent) 20%, transparent);
+}
+
+.deals-controls .view-tab.tone-neutral {
+  --tab-soft: #eef0f6;
+}
+
+.follow-up-cell {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.follow-up-cell .status-badge {
+  padding: 0 7px;
+  font-size: 10.5px;
+  line-height: 16px;
+}
+
+.segmented button:focus-visible {
+  outline: 2px solid #b2ccff;
+  outline-offset: -2px;
+}
+
+.sim-popover {
+  scrollbar-width: none;
+}
+
+.sim-popover::-webkit-scrollbar {
+  display: none;
+}
+
+.sim-popover .segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+}
+
+.sim-popover .segmented button {
+  min-width: 0;
+  padding: 0 10px;
 }
