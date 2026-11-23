@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { formatCount, formatShortInr, stageSlug } from "../../../shared/format";
 import { useDealStore } from "../store/dealStore";
-import { DEAL_STAGES, type DealStage, type QuickFilter } from "../types/deal.types";
+import { DEAL_STAGES, type DealStage } from "../types/deal.types";
 
 interface DashboardPanelProps {
   activeStage: DealStage | null;
-  activeQuickFilter: QuickFilter | null;
   onStageFilter: (stage: DealStage | null) => void;
-  onQuickFilter: (filter: QuickFilter | null) => void;
   onRetry: () => void;
 }
 
@@ -31,9 +29,7 @@ function writeCollapsed(value: boolean): void {
 
 export function DashboardPanel({
   activeStage,
-  activeQuickFilter,
   onStageFilter,
-  onQuickFilter,
   onRetry,
 }: DashboardPanelProps) {
   const dashboard = useDealStore((state) => state.dashboard);
@@ -54,48 +50,6 @@ export function DashboardPanel({
       return !current;
     });
   }
-
-  const kpis: Array<{
-    label: string;
-    value: number | undefined;
-    amount: number | undefined;
-    className: string;
-    pressed: boolean;
-    onClick: () => void;
-  }> = [
-    {
-      label: "Overdue",
-      value: dashboard?.overdue,
-      amount: dashboard?.overdueValue,
-      className: "metric-red",
-      pressed: activeQuickFilter === "overdue",
-      onClick: () => onQuickFilter(activeQuickFilter === "overdue" ? null : "overdue"),
-    },
-    {
-      label: "Due today",
-      value: dashboard?.dueToday,
-      amount: dashboard?.dueTodayValue,
-      className: "metric-amber",
-      pressed: activeQuickFilter === "dueToday",
-      onClick: () => onQuickFilter(activeQuickFilter === "dueToday" ? null : "dueToday"),
-    },
-    {
-      label: "Active",
-      value: dashboard?.activeDeals,
-      amount: dashboard?.activeValue,
-      className: "metric-blue",
-      pressed: activeQuickFilter === "active",
-      onClick: () => onQuickFilter(activeQuickFilter === "active" ? null : "active"),
-    },
-    {
-      label: "Won",
-      value: dashboard?.wonDeals,
-      amount: dashboard?.stageValues.Won,
-      className: "metric-green",
-      pressed: activeStage === "Won",
-      onClick: () => onStageFilter(activeStage === "Won" ? null : "Won"),
-    },
-  ];
 
   return (
     <section className="overview" aria-labelledby="overview-heading">
@@ -129,24 +83,6 @@ export function DashboardPanel({
 
       {!isCollapsed && (
         <div id="overview-body" className="overview-body">
-          <div className="kpi-row">
-            {kpis.map((kpi) => (
-              <button
-                type="button"
-                key={kpi.label}
-                className={`kpi metric-card ${kpi.className} ${kpi.pressed ? "metric-card-active" : ""}`}
-                aria-pressed={kpi.pressed}
-                onClick={kpi.onClick}
-              >
-                <span className="kpi-text">
-                  <span className="kpi-label">{kpi.label}</span>
-                  <span className="kpi-amount">{showAmount(kpi.amount)}</span>
-                </span>
-                <strong className="metric-value">{show(kpi.value)}</strong>
-              </button>
-            ))}
-          </div>
-
           <div className="stage-strip" role="group" aria-label="Deals per stage">
             {DEAL_STAGES.map((stage, index) => {
               const isSelected = activeStage === stage;

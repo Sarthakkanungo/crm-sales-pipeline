@@ -398,9 +398,7 @@ function App() {
 
       <DashboardPanel
         activeStage={filters.stage}
-        activeQuickFilter={filters.quickFilter}
         onStageFilter={(stage) => updateFilters({ stage })}
-        onQuickFilter={selectView}
         onRetry={() => void loadDashboard(scope)}
       />
 
