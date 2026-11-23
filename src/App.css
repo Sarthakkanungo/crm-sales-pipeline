@@ -1875,10 +1875,17 @@ tbody tr.deal-row:focus-visible {
 }
 
 .app {
+  --top-header-height: 68px;
   display: flex;
   flex-direction: column;
   height: 100dvh;
   padding-bottom: 16px;
+}
+
+@media (max-width: 640px) {
+  .app {
+    --top-header-height: 92px;
+  }
 }
 
 .top-header,
@@ -1962,8 +1969,15 @@ tbody tr.deal-row:focus-visible {
 }
 
 .top-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   padding-top: 12px;
   padding-bottom: 12px;
+}
+
+.bulk-bar {
+  top: var(--top-header-height);
 }
 
 .table-shell {
