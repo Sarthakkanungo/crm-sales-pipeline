@@ -17,13 +17,13 @@ const COMPANIES = [
   "Reliable Transport",
 ];
 
-const OWNERS = [
+export const OWNERS = [
   "Rahul Sharma",
   "Priya Singh",
   "Amit Verma",
   "Neha Patel",
   "Vikram Rao",
-  "Anjali Mehta",
+  "Salonee",
 ];
 
 const DEAL_NAMES = [
@@ -79,6 +79,12 @@ function generateFollowUpDate(): string | null {
   return followUpDate.toISOString();
 }
 
+function generateUpdatedAt(): string {
+  const minutesAgo = randomNumber(0, 30 * 24 * 60);
+
+  return new Date(Date.now() - minutesAgo * 60 * 1000).toISOString();
+}
+
 export function generateDeals(count: number): Deal[] {
   return Array.from({ length: count }, (_, index) => {
     const stage: DealStage = randomItem(DEAL_STAGES);
@@ -104,7 +110,7 @@ export function generateDeals(count: number): Deal[] {
       nextFollowUpAt: generateFollowUpDate(),
 
    
-      updatedAt: new Date().toISOString(),
+      updatedAt: generateUpdatedAt(),
       updatedBy: ownerName,
       version: 1,
     };

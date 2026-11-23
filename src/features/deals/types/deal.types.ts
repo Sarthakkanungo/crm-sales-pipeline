@@ -1,4 +1,3 @@
-
 export const DEAL_STAGES = [
   "New Lead",
   "Contacted",
@@ -10,6 +9,7 @@ export const DEAL_STAGES = [
 ] as const;
 
 export type DealStage = (typeof DEAL_STAGES)[number];
+
 export interface DealNote {
   id: string;
   text: string;
@@ -18,28 +18,70 @@ export interface DealNote {
 }
 
 export interface Deal {
-  // Unique identification
   id: string;
-
-  // Customer and deal information
   name: string;
   companyName: string;
   licenceCount: number;
   value: number;
   currency: "INR";
-
   ownerName: string;
-
-  // Sales pipeline
   stage: DealStage;
   closeDate: string | null;
-
-  // Customer interactions
   notes: DealNote[];
   nextFollowUpAt: string | null;
-
-  // Collaboration and concurrency
   updatedAt: string;
   updatedBy: string;
   version: number;
+}
+
+export type DealScope = "mine" | "all";
+
+export type QuickFilter = "active" | "overdue" | "dueToday" | "updatedToday";
+
+export type SortKey = "nextFollowUpAt" | "value" | "closeDate" | "updatedAt";
+
+export type SortDirection = "asc" | "desc";
+
+export interface DealQuery {
+  search: string;
+  stage: DealStage | null;
+  scope: DealScope;
+  quickFilter: QuickFilter | null;
+  sortKey: SortKey;
+  sortDirection: SortDirection;
+}
+
+export interface DealUpdateRequest {
+  id: string;
+  newStage: DealStage;
+  expectedVersion: number;
+}
+
+export interface FollowUpUpdateRequest {
+  id: string;
+  nextFollowUpAt: string;
+  expectedVersion: number;
+}
+
+export type DealUpdateResult =
+  | {
+      status: "success";
+      deal: Deal;
+    }
+  | {
+      status: "conflict";
+      id: string;
+      latestDeal: Deal;
+      message: string;
+    }
+  | {
+      status: "failed";
+      id: string;
+      message: string;
+      retryable: boolean;
+    };
+
+export interface DealChangeEvent {
+  deal: Deal;
+  previousStage: DealStage;
 }
