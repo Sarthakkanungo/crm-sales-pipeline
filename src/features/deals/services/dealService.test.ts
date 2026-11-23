@@ -49,6 +49,32 @@ describe("fake deal API", () => {
     expect(deal.stage).toBe(target);
   });
 
+  it("stamps the close date when a deal is won or lost and restores it when reopened", async () => {
+    const deal = mockDeals.find(
+      (item, index) => index >= 30 && item.stage === "Negotiation" && item.closeDate !== null
+    )!;
+    const expectedClose = deal.closeDate;
+    const before = Date.now();
+
+    await updateDealStage({ id: deal.id, newStage: "Won", expectedVersion: deal.version });
+    const wonOn = Date.parse(deal.closeDate!);
+
+    expect(wonOn).toBeGreaterThanOrEqual(before);
+    expect(wonOn).toBeLessThanOrEqual(Date.now());
+
+    await updateDealStage({ id: deal.id, newStage: "Lost", expectedVersion: deal.version });
+    expect(Date.parse(deal.closeDate!)).toBeGreaterThanOrEqual(wonOn);
+
+    await updateDealStage({ id: deal.id, newStage: "Negotiation", expectedVersion: deal.version });
+    expect(deal.closeDate).toBe(expectedClose);
+  });
+
+  it("gives generated won and lost deals a close date", () => {
+    const closed = mockDeals.filter((deal) => deal.stage === "Won" || deal.stage === "Lost");
+
+    expect(closed.every((deal) => deal.closeDate !== null)).toBe(true);
+  });
+
   it("rejects a save based on an old version instead of overwriting", async () => {
     const deal = mockDeals[1];
     const staleVersion = deal.version;

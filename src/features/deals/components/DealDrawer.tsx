@@ -22,6 +22,7 @@ import {
   saveFollowUp,
 } from "../actions/dealActions";
 import { simulateTeammateEditWithFeedback } from "../actions/simulationActions";
+import { isOpenStage } from "../logic/dealQuery";
 import { useDealStore } from "../store/dealStore";
 import { DEAL_STAGES, type DealStage } from "../types/deal.types";
 
@@ -193,7 +194,7 @@ export function DealDrawer({ dealId, openedAt, onClose }: DealDrawerProps) {
             </strong>
           </div>
           <div>
-            <span>Close date</span>
+            <span>{isOpenStage(deal.stage) ? "Expected close" : `${deal.stage} on`}</span>
             <strong>{deal.closeDate ? formatDate(deal.closeDate) : "Not set"}</strong>
           </div>
           <div>

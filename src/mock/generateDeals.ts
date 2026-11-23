@@ -89,6 +89,7 @@ export function generateDeals(count: number): Deal[] {
   return Array.from({ length: count }, (_, index) => {
     const stage: DealStage = randomItem(DEAL_STAGES);
     const ownerName = randomItem(OWNERS);
+    const updatedAt = generateUpdatedAt();
 
     return {
       id: `deal-${index + 1}`,
@@ -102,7 +103,7 @@ export function generateDeals(count: number): Deal[] {
 
       closeDate:
         stage === "Won" || stage === "Lost"
-          ? null
+          ? updatedAt
           : `2026-${String(randomNumber(1, 12)).padStart(2, "0")}-${String(randomNumber(1, 28)).padStart(2, "0")}`,
 
      
@@ -110,7 +111,7 @@ export function generateDeals(count: number): Deal[] {
       nextFollowUpAt: generateFollowUpDate(),
 
    
-      updatedAt: generateUpdatedAt(),
+      updatedAt,
       updatedBy: ownerName,
       version: 1,
     };

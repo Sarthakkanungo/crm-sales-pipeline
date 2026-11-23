@@ -7,6 +7,7 @@ import {
   type DashboardData,
   type ViewTabCounts,
 } from "../logic/dashboard";
+import { isOpenStage } from "../logic/dealQuery";
 import { createQueryEngine } from "../logic/queryEngine";
 import {
   DEAL_STAGES,
@@ -79,6 +80,26 @@ function findSnapshot(snapshotId: string | undefined): Snapshot | undefined {
 
 function cloneDeal(deal: Deal): Deal {
   return structuredClone(deal);
+}
+
+const expectedCloseDates = new Map<string, string | null>();
+
+function changeStage(deal: Deal, newStage: DealStage): void {
+  const wasOpen = isOpenStage(deal.stage);
+  const isOpen = isOpenStage(newStage);
+
+  if (wasOpen && !isOpen) {
+    expectedCloseDates.set(deal.id, deal.closeDate);
+  }
+
+  if (!isOpen) {
+    deal.closeDate = new Date().toISOString();
+  } else if (!wasOpen) {
+    deal.closeDate = expectedCloseDates.get(deal.id) ?? null;
+    expectedCloseDates.delete(deal.id);
+  }
+
+  deal.stage = newStage;
 }
 
 function pickRandom<T>(items: readonly T[]): T {
@@ -223,7 +244,7 @@ export async function updateDealStage(
   await simulateNetworkDelay();
 
   return applyWrite(request.id, request.expectedVersion, (deal) => {
-    deal.stage = request.newStage;
+    changeStage(deal, request.newStage);
   });
 }
 
@@ -234,7 +255,7 @@ export async function updateDealsStage(
 
   return requests.map((request) =>
     applyWrite(request.id, request.expectedVersion, (deal) => {
-      deal.stage = request.newStage;
+      changeStage(deal, request.newStage);
     })
   );
 }
@@ -306,7 +327,7 @@ export function simulateTeammateEdit(dealId?: string): Deal | null {
 
   const previousStage = deal.stage;
 
-  deal.stage = pickRandom(DEAL_STAGES.filter((stage) => stage !== deal.stage));
+  changeStage(deal, pickRandom(DEAL_STAGES.filter((stage) => stage !== deal.stage)));
   deal.updatedAt = new Date().toISOString();
   deal.updatedBy = pickRandom(TEAMMATES);
   deal.version += 1;
