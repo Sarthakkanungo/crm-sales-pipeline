@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from "react";
+import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import { formatCount } from "../../../shared/format";
 import type { ViewTabCounts } from "../logic/dashboard";
 import type { QuickFilter } from "../types/deal.types";
@@ -8,6 +8,7 @@ interface ViewTabsProps {
   counts: ViewTabCounts | null;
   sortedByPriority: boolean;
   onChange: (tab: QuickFilter | null) => void;
+  children?: ReactNode;
 }
 
 const TABS: Array<{
@@ -23,7 +24,13 @@ const TABS: Array<{
   { value: "updatedToday", label: "Updated today", countKey: "updatedToday", tone: "moss" },
 ];
 
-export function ViewTabs({ active, counts, sortedByPriority, onChange }: ViewTabsProps) {
+export function ViewTabs({
+  active,
+  counts,
+  sortedByPriority,
+  onChange,
+  children,
+}: ViewTabsProps) {
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const activeIndex = TABS.findIndex((tab) => tab.value === active);
 
@@ -85,6 +92,7 @@ export function ViewTabs({ active, counts, sortedByPriority, onChange }: ViewTab
       </div>
 
       {priorityNote && <p className="view-tabs-note">{priorityNote}</p>}
+      {children}
     </div>
   );
 }

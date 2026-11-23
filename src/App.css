@@ -1636,7 +1636,7 @@ body {
 }
 
 .top-header {
-  margin: -28px -32px 24px;
+  margin: -28px -32px 16px;
   padding: 16px 32px;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
@@ -1898,7 +1898,7 @@ tbody tr.deal-row:focus-visible {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  min-height: 480px;
+  min-height: 0;
   margin-bottom: 0;
 }
 
@@ -1920,6 +1920,13 @@ tbody tr.deal-row:focus-visible {
 
 .deals-controls .view-tabs {
   flex-wrap: nowrap;
+}
+
+.deals-controls .overview-show {
+  flex: none;
+  align-self: center;
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .deals-controls .view-tab {
@@ -1995,7 +2002,7 @@ tbody tr.deal-row:focus-visible {
 
 .table-viewport {
   flex: 1 1 auto;
-  min-height: 260px;
+  min-height: 150px;
   overflow: auto;
   overscroll-behavior: contain;
 }
@@ -2067,11 +2074,11 @@ tbody tr.deal-row:focus-visible {
 
 .table-viewport tr.deal-row,
 .table-viewport tr.placeholder-row {
-  height: 52px;
+  height: 48px;
 }
 
 .table-viewport tr.deal-row td {
-  height: 52px;
+  height: 48px;
   padding-top: 0;
   padding-bottom: 0;
   overflow: hidden;
@@ -2105,7 +2112,7 @@ tbody tr.deal-row:focus-visible {
 }
 
 .placeholder-row td {
-  height: 52px;
+  height: 48px;
   padding: 0 16px 0 60px;
   box-shadow: inset 0 -1px 0 var(--line-soft);
 }
@@ -2141,7 +2148,7 @@ tbody tr.deal-row:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 8px 16px;
-  padding: 8px 16px;
+  padding: 5px 16px;
   border-top: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface-sunken) 70%, white);
   color: var(--muted);
@@ -2172,21 +2179,6 @@ tbody tr.deal-row:focus-visible {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
-}
-
-@media (max-height: 760px) {
-  .app {
-    height: auto;
-  }
-
-  .deals-section {
-    min-height: 0;
-  }
-
-  .table-viewport {
-    flex: none;
-    height: 70vh;
-  }
 }
 
 .deals-controls .view-tabs {

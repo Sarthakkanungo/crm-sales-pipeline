@@ -17,6 +17,7 @@ import { SimulationPanel, SimulationSummary } from "./features/deals/components/
 import { useDealRows } from "./features/deals/hooks/useDealRows";
 import { useViewTabCounts } from "./features/deals/hooks/useViewTabCounts";
 import { useLiveUpdates } from "./features/deals/hooks/useLiveUpdates";
+import { useOverviewToggle } from "./features/deals/hooks/useOverviewToggle";
 import { rowIdAt, rowIdsBetween } from "./features/deals/logic/rowBatches";
 import {
   EMPTY_SELECTION,
@@ -89,6 +90,11 @@ function App() {
   );
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isSimOpen, setIsSimOpen] = useState(false);
+  const {
+    isCollapsed: isOverviewCollapsed,
+    toggle: toggleOverview,
+    toggleRef: overviewToggleRef,
+  } = useOverviewToggle();
 
   const searchRef = useRef<HTMLInputElement>(null);
   const tableRef = useRef<DealsTableHandle>(null);
@@ -398,6 +404,9 @@ function App() {
 
       <DashboardPanel
         activeStage={filters.stage}
+        isCollapsed={isOverviewCollapsed}
+        toggleRef={overviewToggleRef}
+        onToggle={toggleOverview}
         onStageFilter={(stage) => updateFilters({ stage })}
         onRetry={() => void loadDashboard(scope)}
       />
@@ -415,7 +424,19 @@ function App() {
               filters.sortKey === "nextFollowUpAt" && filters.sortDirection === "asc"
             }
             onChange={selectView}
-          />
+          >
+            {isOverviewCollapsed && (
+              <button
+                ref={overviewToggleRef}
+                type="button"
+                className="link-button overview-show"
+                aria-expanded="false"
+                onClick={toggleOverview}
+              >
+                Show overview
+              </button>
+            )}
+          </ViewTabs>
 
           <DealsToolbar
             searchRef={searchRef}

@@ -48,7 +48,7 @@ interface DealsTableProps {
   onRangeChange: (firstVisible: number, lastVisible: number) => void;
 }
 
-const ROW_HEIGHT = 52;
+const ROW_HEIGHT = 48;
 const HEADER_HEIGHT = 40;
 
 const SORTABLE_COLUMNS: Array<{ key: SortKey; label: string }> = [
