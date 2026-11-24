@@ -1,195 +1,93 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  allowedScope,
-  getPermissions,
-  ROLE_LABELS,
-  type Role,
-} from "./features/session/permissions";
-import { sessionStore, useSession } from "./features/session/sessionStore";
-import { cancelBulkConfirm, requestBulkMove } from "./features/deals/actions/bulkActions";
+import { AppHeader } from "./AppHeader";
+import { getPermissions } from "./features/session/permissions";
+import { useSession } from "./features/session/sessionStore";
+import { requestBulkMove } from "./features/deals/actions/bulkActions";
 import { loadDashboard, moveDeal } from "./features/deals/actions/dealActions";
 import { BulkBar } from "./features/deals/components/BulkBar";
 import { DashboardPanel } from "./features/deals/components/DashboardPanel";
-import { ViewTabs } from "./features/deals/components/ViewTabs";
 import { DealDrawer } from "./features/deals/components/DealDrawer";
-import {
-  DealsTable,
-  type DealsTableHandle,
-  type SelectAllState,
-} from "./features/deals/components/DealsTable";
+import { DealsTable, type DealsTableHandle } from "./features/deals/components/DealsTable";
 import { DealsToolbar } from "./features/deals/components/DealsToolbar";
-import { SimulationPanel, SimulationSummary } from "./features/deals/components/SimulationPanel";
+import { LiveChangesPill } from "./features/deals/components/LiveChangesPill";
+import { SimulationPanel } from "./features/deals/components/SimulationPanel";
+import { ViewTabs } from "./features/deals/components/ViewTabs";
+import { useDealDrawer } from "./features/deals/hooks/useDealDrawer";
+import { useDealFilters } from "./features/deals/hooks/useDealFilters";
 import { useDealRows } from "./features/deals/hooks/useDealRows";
-import { useViewTabCounts } from "./features/deals/hooks/useViewTabCounts";
+import { useGlobalShortcuts } from "./features/deals/hooks/useGlobalShortcuts";
 import { useLiveUpdates } from "./features/deals/hooks/useLiveUpdates";
 import { useOverviewToggle } from "./features/deals/hooks/useOverviewToggle";
-import { rowIdAt, rowIdsBetween } from "./features/deals/logic/rowBatches";
-import {
-  EMPTY_SELECTION,
-  selectAllMatching,
-  selectionCount,
-  setDealsSelected,
-  toggleDealSelected,
-} from "./features/deals/logic/selection";
-import { useBulkStore } from "./features/deals/store/bulkStore";
+import { useRowSelection } from "./features/deals/hooks/useRowSelection";
+import { useViewTabCounts } from "./features/deals/hooks/useViewTabCounts";
+import { rowIdAt } from "./features/deals/logic/rowBatches";
+import { selectionCount } from "./features/deals/logic/selection";
 import { useDealStore } from "./features/deals/store/dealStore";
-import {
-  DEAL_STAGES,
-  VIEW_ORDER,
-  type Deal,
-  type DealQuery,
-  type DealScope,
-  type DealStage,
-  type QuickFilter,
-  type SortDirection,
-  type SortKey,
-} from "./features/deals/types/deal.types";
-import { resolveFilterConflict } from "./features/deals/logic/dealQuery";
-import { isTypingTarget } from "./shared/focus";
-import { formatCount, getInitials } from "./shared/format";
+import type { DealStage } from "./features/deals/types/deal.types";
+import { formatCount } from "./shared/format";
 import { ShortcutHelp } from "./shared/ShortcutHelp";
 import { Toasts } from "./shared/Toasts";
-import { runLastUndo } from "./shared/toastStore";
-import { useDebouncedValue } from "./shared/useDebouncedValue";
 
 import "./App.css";
 
-type Filters = Omit<DealQuery, "search">;
-
-const DEFAULT_FILTERS: Filters = {
-  stage: null,
-  scope: "mine",
-  quickFilter: null,
-  sortKey: "nextFollowUpAt",
-  sortDirection: "asc",
-};
-
-const DEFAULT_SORT_DIRECTION: Record<SortKey, SortDirection> = {
-  nextFollowUpAt: "asc",
-  closeDate: "asc",
-  value: "desc",
-  updatedAt: "desc",
-};
-
-function defaultScopeFor(role: Role): DealScope {
-  return role === "manager" ? "all" : "mine";
-}
-
-function getLoadedDeals(fromIndex: number, toIndex: number): Deal[] {
-  const { batches, dealsById } = useDealStore.getState();
-
-  return rowIdsBetween(batches, fromIndex, toIndex)
-    .map((id) => dealsById[id])
-    .filter((deal): deal is Deal => Boolean(deal));
-}
-
 function App() {
-  const [searchInput, setSearchInput] = useState("");
-  const search = useDebouncedValue(searchInput, 300);
-  const [filters, setFilters] = useState<Filters>(() => ({
-    ...DEFAULT_FILTERS,
-    scope: defaultScopeFor(sessionStore.getState().role),
-  }));
-  const quickFilterRef = useRef(filters.quickFilter);
-  const session = useSession();
-  const permissions = getPermissions(session);
-  const scope = allowedScope(session, filters.scope);
-  const query = useMemo<DealQuery>(
-    () => ({ ...filters, scope, search }),
-    [filters, scope, search]
-  );
-
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [drawer, setDrawer] = useState<{ dealId: string; openedAt: number } | null>(
-    null
-  );
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isSimOpen, setIsSimOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const tableRef = useRef<DealsTableHandle>(null);
+
+  const session = useSession();
+  const permissions = getPermissions(session);
+  const resetFocus = useCallback(() => setFocusedIndex(0), []);
+  const {
+    searchInput,
+    setSearchInput,
+    filters,
+    scope,
+    query,
+    countsQuery,
+    filterKey,
+    hasFilters,
+    setStage,
+    toggleStage,
+    setScope,
+    selectView,
+    stepView,
+    sortBy,
+    clearFilters,
+  } = useDealFilters(resetFocus);
+  const { drawer, openDrawer, closeDrawer, keepIdsRef } = useDealDrawer(tableRef);
   const {
     isCollapsed: isOverviewCollapsed,
     toggle: toggleOverview,
     toggleRef: overviewToggleRef,
   } = useOverviewToggle();
 
-  const searchRef = useRef<HTMLInputElement>(null);
-  const tableRef = useRef<DealsTableHandle>(null);
-  const returnFocusRef = useRef<HTMLElement | null>(null);
-  const anchorIndexRef = useRef<number | null>(null);
-  const keepIdsRef = useRef<string[]>([]);
-  const queryRef = useRef<DealQuery>(query);
-
-  const filterKey = `${search}|${filters.stage}|${scope}|${filters.quickFilter}|${session.role}`;
+  const queryRef = useRef(query);
 
   useEffect(() => {
     queryRef.current = query;
   }, [query]);
 
   useEffect(() => {
-    quickFilterRef.current = filters.quickFilter;
-  }, [filters.quickFilter]);
-
-  useEffect(() => {
-    keepIdsRef.current = drawer ? [drawer.dealId] : [];
-  }, [drawer]);
-
-  useEffect(() => {
-    useDealStore.getState().setSelection(EMPTY_SELECTION);
-    cancelBulkConfirm();
-    anchorIndexRef.current = null;
-  }, [filterKey]);
-
-  useEffect(() => {
     void loadDashboard(scope);
   }, [scope, session.role]);
 
-  useEffect(
-    () =>
-      sessionStore.subscribe((next, previous) => {
-        if (next.role !== previous.role) {
-          setDrawer(null);
-          setFilters((current) => ({ ...current, scope: defaultScopeFor(next.role) }));
-          setFocusedIndex(0);
-        }
-      }),
-    []
-  );
-
   const { isLoading, error, reload, ensureRange } = useDealRows(query, keepIdsRef);
   useLiveUpdates(queryRef);
-
-  const countsQuery = useMemo<DealQuery>(
-    () => ({
-      search,
-      stage: filters.stage,
-      scope,
-      quickFilter: null,
-      sortKey: filters.sortKey,
-      sortDirection: filters.sortDirection,
-    }),
-    [search, filters.stage, scope, filters.sortKey, filters.sortDirection]
-  );
   const tabCounts = useViewTabCounts(countsQuery);
 
   const total = useDealStore((state) => state.total);
   const loadedAt = useDealStore((state) => state.loadedAt);
-  const backgroundChanges = useDealStore((state) => state.backgroundChanges);
-  const staleRows = useDealStore(
-    (state) =>
-      Object.values(state.liveMarks).filter((mark) => !mark.matchesView).length
+  const { selectAllState, toggleSelect, selectRange, toggleAll } = useRowSelection(
+    query,
+    total,
+    filterKey
   );
-  const selectAllState = useDealStore((state): SelectAllState => {
-    const { selection } = state;
-
-    if (selection.mode === "query" && Object.keys(selection.excluded).length === 0) {
-      return "all";
-    }
-
-    return selectionCount(selection) > 0 ? "some" : "none";
-  });
 
   const now = useMemo(() => new Date(loadedAt), [loadedAt]);
   const activeIndex = Math.min(focusedIndex, Math.max(0, total - 1));
-  const hasFilters = Boolean(searchInput || filters.stage || filters.quickFilter);
 
   const handleRangeChange = useCallback(
     (firstVisible: number, lastVisible: number) => {
@@ -199,105 +97,17 @@ function App() {
     [ensureRange]
   );
 
-  function updateFilters(patch: Partial<Filters>): void {
-    const changed = "quickFilter" in patch ? "quickFilter" : "stage";
-
-    setFilters((current) => resolveFilterConflict({ ...current, ...patch }, changed));
-    setFocusedIndex(0);
-  }
-
-  function handleSort(key: SortKey): void {
-    setFilters((current) => ({
-      ...current,
-      sortKey: key,
-      sortDirection:
-        current.sortKey === key
-          ? current.sortDirection === "asc"
-            ? "desc"
-            : "asc"
-          : DEFAULT_SORT_DIRECTION[key],
-    }));
-  }
-
-  function clearFilters(): void {
-    setSearchInput("");
-    updateFilters({ stage: null, quickFilter: null });
-  }
-
-  const openDeal = useCallback((dealId: string, index?: number) => {
-    returnFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-    if (index !== undefined) {
-      setFocusedIndex(index);
-    }
-
-    setIsSimOpen(false);
-    setDrawer({ dealId, openedAt: Date.now() });
-  }, []);
-
-  function selectView(quickFilter: QuickFilter | null): void {
-    const needsPriorityOrder = quickFilter === "overdue" || quickFilter === "dueToday";
-
-    updateFilters(
-      needsPriorityOrder
-        ? { quickFilter, sortKey: "nextFollowUpAt", sortDirection: "asc" }
-        : { quickFilter }
-    );
-  }
-
-  function closeDrawer(): void {
-    setDrawer(null);
-
-    const returnTo = returnFocusRef.current;
-
-    requestAnimationFrame(() => {
-      if (returnTo?.isConnected) {
-        returnTo.focus();
-      } else {
-        tableRef.current?.focusActiveRow();
-      }
-    });
-  }
-
-  const toggleSelect = useCallback(
-    (dealId: string, index: number, shiftKey: boolean) => {
-      const store = useDealStore.getState();
-      const anchor = anchorIndexRef.current;
-
-      if (shiftKey && anchor !== null && anchor !== index) {
-        const from = Math.min(anchor, index);
-        const to = Math.max(anchor, index);
-        const deals = getLoadedDeals(from, to);
-
-        store.setSelection(setDealsSelected(store.selection, deals, true));
-      } else {
-        const deal = store.dealsById[dealId];
-
-        if (deal) {
-          store.setSelection(toggleDealSelected(store.selection, deal));
-        }
+  const openDeal = useCallback(
+    (dealId: string, index?: number) => {
+      if (index !== undefined) {
+        setFocusedIndex(index);
       }
 
-      anchorIndexRef.current = index;
+      setIsSimOpen(false);
+      openDrawer(dealId);
     },
-    []
+    [openDrawer]
   );
-
-  const selectRange = useCallback((fromIndex: number, toIndex: number) => {
-    const store = useDealStore.getState();
-    const deals = getLoadedDeals(fromIndex, toIndex);
-
-    store.setSelection(setDealsSelected(store.selection, deals, true));
-  }, []);
-
-  function toggleAll(): void {
-    useDealStore
-      .getState()
-      .setSelection(
-        selectAllState === "all" ? EMPTY_SELECTION : selectAllMatching(query, total)
-      );
-  }
 
   const handleStageKey = useCallback(
     (stage: DealStage) => {
@@ -317,139 +127,23 @@ function App() {
     [activeIndex]
   );
 
-  useEffect(() => {
-    if (drawer || isHelpOpen) {
-      return;
-    }
-
-    function handleGlobalKeyDown(event: KeyboardEvent): void {
-      const isUndo =
-        (event.ctrlKey || event.metaKey) &&
-        !event.shiftKey &&
-        event.key.toLowerCase() === "z";
-
-      if (isUndo) {
-        if (!isTypingTarget(event.target) && runLastUndo()) {
-          event.preventDefault();
-        }
-        return;
-      }
-
-      if (
-        isTypingTarget(event.target) ||
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey
-      ) {
-        return;
-      }
-
-      const stageShortcut = /^Digit([0-7])$/.exec(event.code);
-
-      if (event.shiftKey && stageShortcut) {
-        event.preventDefault();
-        const stage = DEAL_STAGES[Number(stageShortcut[1]) - 1] ?? null;
-
-        setFilters((current) =>
-          resolveFilterConflict(
-            { ...current, stage: stage === current.stage ? null : stage },
-            "stage"
-          )
-        );
-        setFocusedIndex(0);
-        return;
-      }
-
-      if (event.shiftKey && event.code === "KeyO") {
-        event.preventDefault();
-        toggleOverview({ keepFocus: true });
-        return;
-      }
-
-      if (event.key === "/") {
-        event.preventDefault();
-        searchRef.current?.focus();
-      } else if (event.key === "?") {
-        event.preventDefault();
-        setIsHelpOpen(true);
-      } else if (event.key === "Escape") {
-        if (useBulkStore.getState().confirm) {
-          cancelBulkConfirm();
-        } else {
-          useDealStore.getState().setSelection(EMPTY_SELECTION);
-        }
-      } else if (
-        (event.key === "PageDown" || event.key === "PageUp") &&
-        !event.defaultPrevented
-      ) {
-        event.preventDefault();
-        tableRef.current?.moveByScreen(event.key === "PageDown" ? 1 : -1);
-      } else if (event.key === "Home" && !event.defaultPrevented) {
-        event.preventDefault();
-        tableRef.current?.focusFirstRow();
-      } else if (event.key === "[" || event.key === "]") {
-        event.preventDefault();
-        const step = event.key === "]" ? 1 : -1;
-        const current = VIEW_ORDER.indexOf(quickFilterRef.current);
-        selectView(VIEW_ORDER[(current + step + VIEW_ORDER.length) % VIEW_ORDER.length]);
-      } else if (
-        !event.defaultPrevented &&
-        selectionCount(useDealStore.getState().selection) > 0
-      ) {
-        const stage = DEAL_STAGES[Number(event.key) - 1];
-
-        if (stage) {
-          event.preventDefault();
-          requestBulkMove(stage);
-        }
-      }
-    }
-
-    document.addEventListener("keydown", handleGlobalKeyDown);
-
-    return () => document.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [drawer, isHelpOpen, toggleOverview]);
-
-  const pendingTeammateChanges = backgroundChanges + staleRows;
+  useGlobalShortcuts(!drawer && !isHelpOpen, {
+    toggleStage,
+    toggleOverview: () => toggleOverview({ keepFocus: true }),
+    stepView,
+    focusSearch: () => searchRef.current?.focus(),
+    openHelp: () => setIsHelpOpen(true),
+    moveByScreen: (direction) => tableRef.current?.moveByScreen(direction),
+    focusFirstRow: () => tableRef.current?.focusFirstRow(),
+  });
 
   return (
     <main className={drawer ? "app drawer-open" : "app"}>
-      <header className="top-header">
-        <div className="brand">
-          <div className="brand-logo">S</div>
-          <div>
-            <h1>Sales Pipeline</h1>
-            <span>{permissions.canViewTeam ? "Team pipeline" : "My pipeline"}</span>
-          </div>
-        </div>
-
-        <div className="header-actions">
-          <button
-            type="button"
-            className="sim-toggle"
-            aria-expanded={isSimOpen}
-            onClick={() => setIsSimOpen((open) => !open)}
-          >
-            Simulator <SimulationSummary />
-          </button>
-
-          <button
-            type="button"
-            className="shortcut-button"
-            onClick={() => setIsHelpOpen(true)}
-          >
-            Keyboard shortcuts <kbd>?</kbd>
-          </button>
-
-          <div className="user-profile">
-            <div className="user-avatar">{getInitials(session.userName)}</div>
-            <div className="user-info">
-              <strong>{session.userName}</strong>
-              <span>{ROLE_LABELS[session.role]}</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        isSimOpen={isSimOpen}
+        onToggleSim={() => setIsSimOpen((open) => !open)}
+        onOpenHelp={() => setIsHelpOpen(true)}
+      />
 
       {isSimOpen && <SimulationPanel onClose={() => setIsSimOpen(false)} />}
 
@@ -458,7 +152,7 @@ function App() {
         isCollapsed={isOverviewCollapsed}
         toggleRef={overviewToggleRef}
         onToggle={toggleOverview}
-        onStageFilter={(stage) => updateFilters({ stage })}
+        onStageFilter={setStage}
         onRetry={() => void loadDashboard(scope)}
       />
 
@@ -497,8 +191,8 @@ function App() {
             canViewTeam={permissions.canViewTeam}
             hasFilters={hasFilters}
             onSearchChange={setSearchInput}
-            onStageChange={(stage) => updateFilters({ stage })}
-            onScopeChange={(scope) => updateFilters({ scope })}
+            onStageChange={setStage}
+            onScopeChange={setScope}
             onClearFilters={clearFilters}
             onGoToResults={() => tableRef.current?.focusFirstRow()}
           />
@@ -513,16 +207,7 @@ function App() {
           </p>
         )}
 
-        {pendingTeammateChanges > 0 && (
-          <div className="live-pill" role="status">
-            Teammates changed {formatCount(pendingTeammateChanges)} deal
-            {pendingTeammateChanges === 1 ? "" : "s"} that affect this view. Rows stay
-            where they are until you refresh.
-            <button type="button" className="link-button" onClick={reload}>
-              Refresh view
-            </button>
-          </div>
-        )}
+        <LiveChangesPill onRefresh={reload} />
 
         <BulkBar />
 
@@ -547,7 +232,7 @@ function App() {
               )}
             </>
           }
-          onSort={handleSort}
+          onSort={sortBy}
           onFocusedIndexChange={setFocusedIndex}
           onOpen={openDeal}
           onToggleSelect={toggleSelect}
