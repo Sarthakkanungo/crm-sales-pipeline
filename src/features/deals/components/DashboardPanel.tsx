@@ -60,7 +60,7 @@ export function DashboardPanel({
           className="link-button"
           aria-expanded="true"
           aria-controls="overview-body"
-          onClick={onToggle}
+          onClick={() => onToggle()}
         >
           Hide overview
         </button>

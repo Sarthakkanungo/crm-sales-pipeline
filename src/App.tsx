@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { allowedScope, getPermissions, ROLE_LABELS } from "./features/session/permissions";
+import {
+  allowedScope,
+  getPermissions,
+  ROLE_LABELS,
+  type Role,
+} from "./features/session/permissions";
 import { sessionStore, useSession } from "./features/session/sessionStore";
 import { cancelBulkConfirm, requestBulkMove } from "./features/deals/actions/bulkActions";
 import { loadDashboard, moveDeal } from "./features/deals/actions/dealActions";
@@ -33,6 +38,7 @@ import {
   VIEW_ORDER,
   type Deal,
   type DealQuery,
+  type DealScope,
   type DealStage,
   type QuickFilter,
   type SortDirection,
@@ -65,6 +71,10 @@ const DEFAULT_SORT_DIRECTION: Record<SortKey, SortDirection> = {
   updatedAt: "desc",
 };
 
+function defaultScopeFor(role: Role): DealScope {
+  return role === "manager" ? "all" : "mine";
+}
+
 function getLoadedDeals(fromIndex: number, toIndex: number): Deal[] {
   const { batches, dealsById } = useDealStore.getState();
 
@@ -76,7 +86,10 @@ function getLoadedDeals(fromIndex: number, toIndex: number): Deal[] {
 function App() {
   const [searchInput, setSearchInput] = useState("");
   const search = useDebouncedValue(searchInput, 300);
-  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<Filters>(() => ({
+    ...DEFAULT_FILTERS,
+    scope: defaultScopeFor(sessionStore.getState().role),
+  }));
   const quickFilterRef = useRef(filters.quickFilter);
   const session = useSession();
   const permissions = getPermissions(session);
@@ -134,6 +147,8 @@ function App() {
       sessionStore.subscribe((next, previous) => {
         if (next.role !== previous.role) {
           setDrawer(null);
+          setFilters((current) => ({ ...current, scope: defaultScopeFor(next.role) }));
+          setFocusedIndex(0);
         }
       }),
     []
@@ -345,6 +360,12 @@ function App() {
         return;
       }
 
+      if (event.shiftKey && event.code === "KeyO") {
+        event.preventDefault();
+        toggleOverview({ keepFocus: true });
+        return;
+      }
+
       if (event.key === "/") {
         event.preventDefault();
         searchRef.current?.focus();
@@ -387,7 +408,7 @@ function App() {
     document.addEventListener("keydown", handleGlobalKeyDown);
 
     return () => document.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [drawer, isHelpOpen]);
+  }, [drawer, isHelpOpen, toggleOverview]);
 
   const pendingTeammateChanges = backgroundChanges + staleRows;
 
@@ -461,7 +482,7 @@ function App() {
                 type="button"
                 className="link-button overview-show"
                 aria-expanded="false"
-                onClick={toggleOverview}
+                onClick={() => toggleOverview()}
               >
                 Show overview
               </button>

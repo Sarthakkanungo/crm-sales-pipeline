@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const COLLAPSED_KEY = "pipeline.overviewCollapsed";
 
@@ -30,13 +30,13 @@ export function useOverviewToggle() {
     }
   }, [isCollapsed]);
 
-  function toggle(): void {
-    focusAfterToggle.current = true;
+  const toggle = useCallback((options: { keepFocus?: boolean } = {}): void => {
+    focusAfterToggle.current = !options.keepFocus;
     setIsCollapsed((current) => {
       writeCollapsed(!current);
       return !current;
     });
-  }
+  }, []);
 
   return { isCollapsed, toggle, toggleRef };
 }

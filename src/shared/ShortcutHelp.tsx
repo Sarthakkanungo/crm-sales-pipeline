@@ -18,6 +18,7 @@ const SHORTCUTS: Array<{ keys: string; action: string }> = [
   { keys: "Shift + 1 – 7", action: "Show only that stage; press again to show all" },
   { keys: "Shift + 0", action: "Show all stages" },
   { keys: "[  /  ]", action: "Previous / next view tab (All, Active, Overdue, Due today, Updated today)" },
+  { keys: "Shift + O", action: "Hide or show the overview" },
   { keys: "/", action: "Jump to search" },
   { keys: "Ctrl + Z", action: "Undo the last move" },
   { keys: "Esc", action: "Close a panel, or clear the selection" },
